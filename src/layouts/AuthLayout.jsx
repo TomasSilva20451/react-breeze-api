@@ -10,7 +10,7 @@ const AuthLayout = () => {
       className="container mx-auto flex flex-wrap items-center justify-between" 
     >
       <a href="https://laraveller.com/" className="flex items-center">
-        Laraveller
+        Premium Motors
       </a>
       
       <div

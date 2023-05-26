@@ -38,7 +38,7 @@ const Register = () => {
               md:px-[60px]
             "
           >
-            <div className="mb-10 text-center md:mb-16">Laraveller</div>
+            <div className="mb-10 text-center md:mb-16">Register</div>
             <form onSubmit={handleRegister}>
             
               <div className="mb-4">
