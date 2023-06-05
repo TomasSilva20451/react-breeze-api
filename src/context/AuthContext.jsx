@@ -1,70 +1,83 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
-import { data } from "autoprefixer";
 
 const AuthContext = createContext({});
 
-export const AuthProvider = ({children}) => {
-    const [user, setUser] = useState(null)
-    const [errors, setErrors] = useState([]);
-    const navigate = useNavigate()
-   // setEmail("")
-   // setPassword("")
-    const csrf = () => axios.get('/sanctum/csrf-cookie')
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [errors, setErrors] = useState([]);
+  const navigate = useNavigate();
 
-    const getUser = async () => {
-        const {data} = await axios.get('/api/user');
-        setUser(data);
-    };
+  const csrf = async () => {
+    await axios.get("/sanctum/csrf-cookie");
+  };
 
-    const login = async ({...data}) => {
-        await csrf();
-        setErrors([]);
-        try{
-            await axios.post('/login', data);
-            await getUser();
-            navigate("/");
-          } catch(e){
-            if(e.response.status === 422){
-              setErrors(e.response.data.errors);
-            }
-          }
-    };
+  const getUser = async () => {
+    try {
+      await csrf();
+      const response = await axios.get("/api/user");
 
-    const register = async ({...data}) => {
+      setUser(response.data);
+    } catch (error) {
+      setUser(null); // Set user to null if an error occurs
+    }
+  };
 
-        await csrf();
-        setErrors([]);
-        try{
-            await axios.post('/register', data);
-            await getUser();
-            navigate("/");
-          } catch(e){
-            if(e.response.status === 422){
-              setErrors(e.response.data.errors);
-            }
-          }
-    };
+  const login = async (data) => {
+    try {
+      await csrf();
+      await axios.post("/login", data);
+      await getUser();
+      navigate("/");
+    } catch (error) {
+      if (error.response && error.response.status === 422) {
+        setErrors(error.response.data.errors);
+      } else {
+        // Handle login error
+      }
+    }
+  };
 
-    const logout =  () => {
-        axios.post('/logout').then(() => {
-            setUser(null);
-        });
-    };
-    
-    useEffect(() => {
-        if(!user){
-            getUser();
-        }
-    }, [])
+  const register = async (data) => {
+    try {
+      await csrf();
+      await axios.post("/register", data);
+      await getUser();
+      navigate("/");
+    } catch (error) {
+      if (error.response && error.response.status === 422) {
+        setErrors(error.response.data.errors);
+      } else {
+        // Handle register error
+      }
+    }
+  };
 
-    return (<AuthContext.Provider value={{user, errors, getUser, login, register, logout, csrf}}>
-        {children}
+  const logout = async () => {
+    try {
+      await axios.post("/logout");
+      setUser(null);
+    } catch (error) {
+      // Handle logout error
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      getUser();
+    }
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{ user, errors, getUser, login, register, logout }}
+    >
+      {children}
     </AuthContext.Provider>
-    );
+  );
 };
 
 export default function useAuthContext() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
